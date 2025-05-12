@@ -1,0 +1,414 @@
+/* Registration Container */
+.registration-container {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.registration-container h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1f2c6c;
+}
+
+/* Progress Indicator */
+.progress-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 30px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.step-number {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+  transition: all 0.3s ease;
+}
+
+.step-label {
+  font-size: 12px;
+  color: #777;
+  transition: color 0.3s ease;
+}
+
+.progress-line {
+  flex-grow: 1;
+  height: 3px;
+  background-color: #ddd;
+  margin: 0 10px;
+  position: relative;
+  top: -13px;
+  z-index: 0;
+}
+
+/* Active and completed states */
+.step.active .step-number {
+  background-color: #3661d6;
+  color: white;
+}
+
+.step.active .step-label {
+  color: #3661d6;
+  font-weight: bold;
+}
+
+.step.completed .step-number {
+  background-color: #4caf50;
+  color: white;
+}
+
+.step.completed ~ .progress-line,
+.step.active ~ .progress-line {
+  background-color: #3661d6;
+}
+
+/* Form Styling */
+.registration-form {
+  width: 100%;
+}
+
+.form-step {
+  animation: fadeIn 0.5s ease;
+}
+
+.form-step h3 {
+  margin-bottom: 20px;
+  color: #1f2c6c;
+  font-size: 18px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input, 
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 14px;
+  transition: border 0.3s ease;
+}
+
+.form-group input:focus, 
+.form-group select:focus {
+  border-color: #3661d6;
+  outline: none;
+}
+
+.form-group input.error, 
+.form-group select.error {
+  border-color: #d32f2f;
+  background-color: rgba(211, 47, 47, 0.05);
+}
+
+.field-error {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+/* Password Field */
+.password-field {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 38px;
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: #333;
+}
+
+/* Password Strength Meter */
+.password-strength {
+  margin-bottom: 20px;
+}
+
+.strength-meter {
+  height: 4px;
+  background-color: #eee;
+  border-radius: 2px;
+  margin-bottom: 5px;
+  overflow: hidden;
+}
+
+.strength-meter-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.strength-meter-fill[data-strength="very-weak"] {
+  background-color: #f44336;
+}
+
+.strength-meter-fill[data-strength="weak"] {
+  background-color: #ff9800;
+}
+
+.strength-meter-fill[data-strength="medium"] {
+  background-color: #ffeb3b;
+}
+
+.strength-meter-fill[data-strength="strong"] {
+  background-color: #4caf50;
+}
+
+.strength-meter-fill[data-strength="very-strong"] {
+  background-color: #2e7d32;
+}
+
+.strength-text {
+  font-size: 12px;
+  text-align: right;
+}
+
+.strength-text.very-weak {
+  color: #f44336;
+}
+
+.strength-text.weak {
+  color: #ff9800;
+}
+
+.strength-text.medium {
+  color: #f57c00;
+}
+
+.strength-text.strong {
+  color: #4caf50;
+}
+
+.strength-text.very-strong {
+  color: #2e7d32;
+}
+
+/* Password Requirements */
+.password-requirements {
+  background-color: #f5f5f5;
+  padding: 15px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.password-requirements p {
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.password-requirements ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.password-requirements li {
+  margin-bottom: 5px;
+  color: #777;
+  transition: color 0.3s ease;
+}
+
+.password-requirements li.met {
+  color: #4caf50;
+  font-weight: 500;
+}
+
+/* Checkbox Group */
+.checkbox-group {
+  display: flex;
+  align-items: flex-start;
+}
+
+.checkbox-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 10px;
+  margin-top: 4px;
+}
+
+.checkbox-group label {
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+.checkbox-group label a {
+  color: #3661d6;
+  text-decoration: none;
+}
+
+.checkbox-group label a:hover {
+  text-decoration: underline;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+}
+
+.primary-button, 
+.secondary-button {
+  padding: 12px 20px;
+  border-radius: 5px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: none;
+}
+
+.primary-button {
+  background-color: #3661d6;
+  color: white;
+}
+
+.primary-button:hover {
+  background-color: #2744a6;
+}
+
+.secondary-button {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.secondary-button:hover {
+  background-color: #e0e0e0;
+}
+
+.primary-button:disabled, 
+.secondary-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Loading State */
+.primary-button.loading {
+  position: relative;
+  background-color: #3661d6;
+  opacity: 0.8;
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-message {
+  background-color: rgba(211, 47, 47, 0.1);
+  color: #d32f2f;
+  padding: 12px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  border-left: 3px solid #d32f2f;
+}
+
+/* Success Message */
+.success-message {
+  text-align: center;
+  padding: 30px 0;
+  animation: fadeIn 0.5s ease;
+}
+
+.success-icon {
+  width: 60px;
+  height: 60px;
+  background-color: #4caf50;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  color: white;
+  margin: 0 auto 20px;
+}
+
+.success-message h3 {
+  color: #4caf50;
+  margin-bottom: 10px;
+}
+
+.success-message p {
+  color: #555;
+  margin-bottom: 5px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Media Queries */
+@media (max-width: 600px) {
+  .registration-container {
+    padding: 20px;
+    max-width: 100%;
+    border-radius: 0;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .primary-button, 
+  .secondary-button {
+    width: 100%;
+  }
+} 

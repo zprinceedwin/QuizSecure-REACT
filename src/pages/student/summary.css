@@ -1,0 +1,104 @@
+/* Fullscreen layout */
+.summary-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100vw;
+    background-color: #f4f8fc;
+    font-family: Arial, sans-serif;
+    position: relative;
+    padding: 40px;
+    box-sizing: border-box;
+  }
+  
+  /* Top-right logout button */
+  .logout-btn {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    padding: 10px 20px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 999;
+  }
+  
+  .logout-btn:hover {
+    background-color: #d32f2f;
+  }
+  
+  /* Card container */
+  .summary-card {
+    background-color: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+    width: 400px;
+    text-align: center;
+  }
+  
+  /* Gauge style */
+  .gauge {
+    width: 100%;
+    height: auto;
+    margin-bottom: 20px;
+    transform: rotate(180deg);
+  }
+  
+  /* Score status */
+  .passed {
+    color: #4caf50;
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .failed {
+    color: #f44336;
+    font-size: 20px;
+    margin-bottom: 5px;
+  }
+  
+  .score-value {
+    font-size: 32px;
+    font-weight: bold;
+    color: #333;
+    margin: 5px 0;
+  }
+  
+  .label {
+    font-size: 16px;
+    color: #777;
+  }
+  
+  /* Info area */
+  .summary-info {
+    margin-top: 20px;
+    font-size: 15px;
+    color: #444;
+    text-align: left;
+  }
+  
+  /* Bottom button */
+  .summary-buttons {
+    margin-top: 30px;
+  }
+  
+  .summary-buttons button {
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+    background-color: #3b68ff;
+    color: white;
+    width: 100%;
+  }
+  
+  .summary-buttons button:hover {
+    background-color: #2d55cc;
+  }
+  

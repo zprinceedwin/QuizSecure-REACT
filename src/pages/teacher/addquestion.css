@@ -1,0 +1,218 @@
+/* Page container */
+.question-wrapper {
+    width: 100vw;
+    height: 100vh;
+    padding: 40px;
+    background-color: #f4f8fc;
+    font-family: Arial, sans-serif;
+    box-sizing: border-box;
+    color: #222;
+  }
+  
+  /* Header */
+  .question-header {
+    text-align: center;
+    margin-bottom: 30px;
+  }
+  
+  .question-header h2 {
+    font-size: 24px;
+    font-weight: bold;
+  }
+  
+  /* Add Form container */
+  .question-form-wrapper {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 600px;
+    margin: 0 auto 40px auto;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    color: #222;
+  }
+  
+  /* Form field */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 6px;
+  }
+  
+  .form-group input[type="text"],
+  .form-group input[type="number"],
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border-radius: 6px;
+    border: 1px solid #aaa;
+    box-sizing: border-box;
+  }
+  
+  textarea {
+    resize: vertical;
+    height: 80px;
+  }
+  
+  /* Choice Row */
+  .choice-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .choice-row input {
+    flex: 1;
+    margin-right: 10px;
+  }
+  
+  .mark-btn {
+    padding: 6px 10px;
+    border: 2px solid #3b68ff;
+    background-color: white;
+    color: #3b68ff;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 5px;
+    margin-right: 5px;
+  }
+  
+  .mark-btn.active {
+    background-color: #3b68ff;
+    color: white;
+  }
+  
+  .delete-btn {
+    padding: 6px 10px;
+    background-color: #f44336;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .delete-btn:hover {
+    background-color: #d32f2f;
+  }
+  
+  .add-choice-btn {
+    padding: 8px 14px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .add-choice-btn:hover {
+    background-color: #3f9142;
+  }
+  
+  /* Toggle */
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  /* Actions */
+  .form-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 25px;
+  }
+  
+  .save-btn {
+    padding: 10px 20px;
+    background-color: #3b68ff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .save-btn:hover {
+    background-color: #2d55cc;
+  }
+  
+  /* Preview Box */
+  .preview-box {
+    margin-top: 30px;
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+  }
+  
+  .preview-box h4 {
+    margin-top: 0;
+    margin-bottom: 10px;
+  }
+  
+  .preview-box ul {
+    padding-left: 20px;
+  }
+  
+  /* Table layout for saved questions (future use) */
+  .question-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 30px;
+  }
+  
+  .question-table th,
+  .question-table td {
+    padding: 12px;
+    border-bottom: 1px solid #ccc;
+    text-align: left;
+  }
+  
+  .question-table th {
+    background-color: #f0f4fa;
+    color: #333;
+  }
+  
+  /* Buttons in table */
+  .edit-btn,
+  .delete-btn {
+    padding: 6px 10px;
+    margin-right: 8px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .edit-btn {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  .edit-btn:hover {
+    background-color: #3f9142;
+  }
+  
+  .delete-btn {
+    background-color: #f44336;
+    color: white;
+  }
+  
+  .delete-btn:hover {
+    background-color: #d32f2f;
+  }
+  
+  .empty-state {
+    text-align: center;
+    color: #777;
+    font-style: italic;
+    font-size: 16px;
+    margin-top: 40px;
+  }
+  

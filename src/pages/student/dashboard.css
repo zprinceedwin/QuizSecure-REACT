@@ -1,0 +1,159 @@
+.dashboard-container {
+  display: flex;
+  height: 100vh;
+  width: 225%;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 200px;
+  background-color: #002b5b;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  align-items: center;
+}
+
+.sidebar-logo {
+  width: 120px;
+  margin-bottom: 10px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.student-name {
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+}
+
+.sidebar nav li {
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+.sidebar nav button {
+  background: none;
+  border: none;
+  color: white;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+/* Main Content */
+.main-content {
+  flex-grow: 1;
+  background-color: #f4f8fc;
+  padding: 40px 60px;
+  color: #222;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.main-content h1 {
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.brand-identity {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 30px;
+  color: #555;
+  text-align: center;
+  max-width: 500px;
+}
+
+/* Redeem Code Box */
+.redeem-box {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.redeem-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.redeem-box input {
+  padding: 12px;
+  width: 80%;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.redeem-box button {
+  padding: 10px 24px;
+  background-color: #3b68ff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.message {
+  color: red;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+/* Quiz Card */
+.quiz-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 500px;
+  text-align: center;
+}
+
+.quiz-title {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.join-btn {
+  margin-top: 10px;
+  padding: 10px 20px;
+  background-color: #3b68ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+}

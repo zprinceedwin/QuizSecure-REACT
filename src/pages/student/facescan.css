@@ -1,0 +1,129 @@
+.facescan-container {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  font-family: Arial, sans-serif;
+}
+
+/* Sidebar */
+.facescan-sidebar {
+  width: 250px;
+  background-color: #002b5b;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+}
+
+.facescan-logo {
+  width: 100px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.facescan-title {
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+/* Main area */
+.facescan-main {
+  flex-grow: 1;
+  background-color: #f4f8fc;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* Camera Card */
+.camera-card {
+  width: 300px;
+  height: 200px;
+  background: white;
+  padding: 0px;
+  border-radius: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Scoped webcam feed and canvas */
+.camera-card .webcam-feed,
+.camera-card canvas {
+  width: 320px !important;
+  height: 240px !important;
+  border-radius: 10px;
+  background-color: black;
+  object-fit: cover;
+  display: block;
+  z-index: 1;
+}
+
+/* Function Card */
+.function-card {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Detection status text */
+.detection-status {
+  font-size: 16px;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+.valid {
+  color: green;
+}
+
+.invalid {
+  color: red;
+}
+
+/* Buttons */
+.button-section {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.back-btn,
+.proceed-btn {
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.back-btn {
+  background-color: #ccc;
+  color: #000;
+}
+
+.proceed-btn {
+  background-color: #3b68ff;
+  color: white;
+}
+
+.proceed-btn:disabled {
+  background-color: #b0b0b0;
+  cursor: not-allowed;
+}

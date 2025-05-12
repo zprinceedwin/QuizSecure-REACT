@@ -1,0 +1,65 @@
+.violation-wrapper {
+    padding: 40px;
+    background-color: #f4f8fc;
+    min-height: 100vh;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+  }
+  
+  .violation-wrapper h2 {
+    font-size: 26px;
+    margin-bottom: 20px;
+    color: #1c1c1c;
+  }
+  
+  .search-bar {
+    width: 100%;
+    max-width: 400px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 15px;
+  }
+  
+  .status-msg {
+    font-style: italic;
+    color: #444;
+  }
+  
+  .violation-table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+    box-shadow: 0 1px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  
+  .violation-table th,
+  .violation-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    text-align: left;
+    color: #222;
+  }
+  
+  .violation-table th {
+    background-color: #dde9f7;
+    font-weight: bold;
+  }
+  
+  .view-btn {
+    padding: 6px 12px;
+    background-color: #004e98;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .view-btn:hover {
+    background-color: #003973;
+  }
+  

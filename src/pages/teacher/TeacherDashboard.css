@@ -1,0 +1,93 @@
+/* Teacher Dashboard Layout */
+.teacher-dashboard {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  font-family: Arial, sans-serif;
+  background-color: #f4f8fc;
+}
+
+/* Sidebar */
+.teacher-sidebar {
+  width: 220px;
+  background-color: #002b5b;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Image Logo Styling */
+.logo-img {
+  width: 120px;
+  margin: 0 auto 40px;
+  display: block;
+}
+
+/* Sidebar Buttons */
+.teacher-sidebar button {
+  background: none;
+  border: none;
+  color: white;
+  text-align: left;
+  padding: 10px 15px;
+  margin: 5px 0;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+}
+
+.teacher-sidebar button:hover {
+  background-color: #004080;
+}
+
+/* Logout button special style */
+.logout-btn {
+  margin-top: auto;
+  background-color: #f44336 !important;
+  color: white;
+}
+
+.logout-btn:hover {
+  background-color: #d32f2f !important;
+}
+
+/* Main Content Panel */
+.teacher-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top Bar */
+.teacher-topbar {
+  background-color: white;
+  padding: 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.teacher-topbar h2 {
+  margin: 0;
+  font-size: 22px;
+  color: #333; /* dark readable title */
+}
+
+/* Content Wrapper */
+.teacher-content {
+  flex: 1;
+  padding: 30px;
+  color: #333; /* readable text */
+}
+
+/* Placeholder Card */
+.page-content {
+  background-color: white;
+  border-radius: 10px;
+  padding: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  font-size: 18px;
+  color: #333;
+}

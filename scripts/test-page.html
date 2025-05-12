@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Security Test Page</title>
+  <meta charset="utf-8">
+</head>
+<body>
+  <h1>Security Test Page</h1>
+  <p>This page is used for security testing.</p>
+  
+  <div id="csp-test">CSP not yet tested</div>
+  
+  <script>
+    // This inline script should be blocked by CSP
+    document.getElementById('csp-test').textContent = 'CSP FAILED - Inline script executed!';
+  </script>
+  
+  <div id="xss-test">
+    <h2>XSS Test</h2>
+    <div id="xss-output"></div>
+    <button onclick="testXSS()">Test XSS Protection</button>
+  </div>
+  
+  <script>
+    function testXSS() {
+      try {
+        // This should be blocked by CSP
+        const script = document.createElement('script');
+        script.textContent = "document.getElementById('xss-output').textContent = 'XSS VULNERABILITY - Injected script executed!'";
+        document.body.appendChild(script);
+      } catch (error) {
+        document.getElementById('xss-output').textContent = 'Error: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html> 

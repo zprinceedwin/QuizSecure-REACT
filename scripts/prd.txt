@@ -1,0 +1,306 @@
+# Product Requirements Document: QuizSecure
+
+**Version:** 1.3
+**Date:** 2024-07-28
+**Document Status:** Draft
+
+# Overview
+
+QuizSecure is a desktop-based online exam monitoring system designed to enhance academic integrity during remote assessments. It solves the problem of cheating in online exams by providing a secure, controlled testing environment coupled with AI-powered proctoring. The target users are students taking exams, educators administering them, and educational institutions aiming to maintain the credibility of their assessments. QuizSecure is valuable because it offers robust, real-time monitoring using advanced AI (like MTCNN for face detection and YOLOv8n for object detection) directly on the student's desktop, minimizing opportunities for academic dishonesty while prioritizing user privacy through local processing and providing a more locked-down environment than web-based solutions.
+
+# Core Features
+
+1.  **Secure Exam Environment (Student Desktop Application)**
+    *   **What it does:** Provides a locked-down desktop application for students to take exams. It restricts access to other applications, websites, and system functions (e.g., copy-paste, new browser windows, task switching) during an exam session.
+    *   **Why it's important:** Prevents students from easily accessing unauthorized resources or external help during the exam, significantly reducing common methods of cheating.
+    *   **How it works:** The Electron-based application leverages OS-level APIs to control the user's environment, monitor running processes, and restrict certain functionalities.
+
+2.  **AI-Powered Real-Time Proctoring (Local Processing)**
+    *   **What it does:** Utilizes the student's webcam to perform real-time monitoring for suspicious behaviors, including:
+        *   **Face Detection & Presence:** Ensures the registered student is present and visible using MTCNN.
+        *   **Gaze Tracking & Head Pose Estimation:** Detects if the student is looking away from the screen for extended periods using MediaPipe.
+        *   **Multiple Face Detection:** Identifies if more than one person is in the camera's view.
+        *   **Object Detection:** Flags unauthorized items like phones or notes using **YOLOv8 Nano (YOLOv8n)**.
+    *   **Why it's important:** Automates the detection of common cheating indicators, providing a scalable and consistent proctoring solution. Local processing enhances privacy and reduces network dependency.
+    *   **How it works:** AI models (MTCNN, MediaPipe, **YOLOv8n**) run locally within the Electron application, processing the webcam feed frame-by-frame. Detected events trigger internal flags or alerts.
+
+3.  **Identity Verification**
+    *   **What it does:** Verifies the student's identity at the beginning of each exam session. This involves capturing a live image/video via the webcam and comparing it against a pre-registered facial profile using face recognition techniques.
+    *   **Why it's important:** Ensures the person taking the exam is the registered student, preventing impersonation.
+    *   **How it works:** The student is prompted to position their face for the camera. The system captures facial features, potentially using MTCNN for detection and a face recognition model for comparison against stored (securely hashed or template-based) enrollment data.
+
+4.  **Quiz Delivery and Interaction (Student Desktop Application)**
+    *   **What it does:** Securely loads and displays quiz content (questions, choices for MCQs, input fields for fill-in-the-blanks) within the desktop application. Allows students to navigate questions, select/input answers, and submit the exam.
+    *   **Why it's important:** Provides a seamless and secure way for students to interact with the exam content within the controlled proctoring environment.
+    *   **How it works:** The application fetches encrypted quiz data from the backend upon successful login and exam selection. Student interactions are logged locally and synced with the backend upon submission or periodically.
+
+5.  **Incident Logging and Reporting (Backend with Teacher/Admin Interface)**
+    *   **What it does:** Systematically logs all detected proctoring events (e.g., gaze deviation, multiple faces, unauthorized object, application switching attempts), warnings issued, and exam suspensions with timestamps. This data is compiled into reports accessible by educators and administrators.
+    *   **Why it's important:** Provides a comprehensive audit trail for each exam session, allowing educators to review suspicious activities and make informed decisions regarding academic integrity.
+    *   **How it works:** Local proctoring events are queued and securely transmitted to the backend server. The backend processes and stores these logs. A web-based or desktop interface allows authorized personnel to view reports and event details.
+
+6.  **Quiz & User Management (Teacher/Admin Interface)**
+    *   **What it does:** Allows educators/administrators to create and manage quizzes (define questions, answers, types, time limits, points), enroll students, manage user accounts, and configure proctoring settings for specific exams or institution-wide.
+    *   **Why it's important:** Empowers educators with the tools to set up and customize assessments and gives administrators control over the platform's usage.
+    *   **How it works:** Typically a web-based dashboard (or a separate admin desktop app) interacts with the backend API to perform CRUD operations on quiz data, user profiles, and system configurations.
+
+# User Experience
+
+### User Personas
+
+1.  **Alex (Student):**
+    *   **Goal:** To take online exams fairly and without undue stress or privacy invasion.
+    *   **Needs:** Clear instructions, a stable application, unobtrusive monitoring, assurance of privacy.
+    *   **Frustrations:** Complicated setup, false flagging, privacy concerns, system crashes.
+
+2.  **Dr. Lee (Educator):**
+    *   **Goal:** To ensure academic integrity in online exams and have a reliable way to assess student knowledge.
+    *   **Needs:** Easy quiz creation, effective proctoring, clear reports on suspicious activities, minimal false positives.
+    *   **Frustrations:** Students finding ways to cheat, time-consuming manual review of proctoring data, unreliable systems.
+
+3.  **Ms. Chen (Exam Administrator/IT Admin):**
+    *   **Goal:** To successfully deploy, manage, and maintain the QuizSecure platform for the institution.
+    *   **Needs:** Easy deployment tools, robust user management, system monitoring capabilities, clear documentation, control over institutional policies.
+    *   **Frustrations:** Difficult installations, update nightmares, lack of centralized control, security vulnerabilities.
+
+### Key User Flows
+
+1.  **Student Exam Journey:**
+    *   Download & Install QuizSecure Application -> Login -> Select Exam -> Identity Verification -> Start Exam (Monitored Environment) -> Answer Questions -> Submit Exam -> View Basic Results/Confirmation.
+    *   *During Exam:* System monitors in background -> If anomaly detected: Student receives warning/quiz pauses -> Student corrects situation -> Exam resumes/incident logged.
+
+2.  **Educator Quiz Management & Monitoring Journey:**
+    *   Login to Teacher/Admin Interface -> Create/Edit Quiz (add questions, set parameters) -> Assign Quiz to Students/Course -> Monitor Active Exam Sessions (view high-level alerts or status) -> Review Post-Exam Reports & Proctoring Logs -> Grade (if applicable) & Release Results.
+
+3.  **Administrator System Setup & Management Journey:**
+    *   Access Admin Interface -> Configure Institutional Settings (proctoring sensitivity, data retention) -> Manage User Accounts (create teachers, bulk import students) -> Deploy/Manage Application Updates -> Monitor System Health & Usage.
+
+### UI/UX Considerations
+
+*   **Student Application:**
+    *   **Simplicity:** Minimalist UI to reduce distractions during exams. Clear, concise instructions.
+    *   **Feedback:** Non-intrusive but clear visual/auditory cues for warnings or system status.
+    *   **Performance:** Smooth performance even with local AI processing; avoid lagging.
+    *   **Onboarding:** Easy installation and first-time setup/identity enrollment.
+*   **Teacher/Admin Interface (Web/Desktop):**
+    *   **Efficiency:** Streamlined workflows for quiz creation and user management.
+    *   **Clarity:** Easy-to-understand proctoring reports with actionable insights. Customizable dashboards.
+    *   **Control:** Granular control over proctoring settings and policies.
+*   **General:**
+    *   **Accessibility:** Adherence to accessibility standards (WCAG where applicable).
+    *   **Consistency:** Consistent design language across all interfaces.
+    *   **Trust & Transparency:** Clear communication about what is being monitored and how data is handled.
+
+# Technical Architecture
+
+### System Components
+
+1.  **QuizSecure Student Desktop Application (Electron):**
+    *   **UI Layer:** HTML, CSS, JavaScript (e.g., React/Vue embedded in Electron).
+    *   **Core Logic:** Node.js runtime within Electron.
+    *   **Local AI Engine:** Native modules or WebAssembly (WASM) bindings for OpenCV, MediaPipe, TensorFlow.js/ONNX.js for MTCNN, **YOLOv8n**.
+    *   **Environment Control Module:** OS-specific APIs for locking down the environment.
+    *   **Secure Storage:** Local encrypted storage for temporary data, user credentials (token).
+    *   **Communication Module:** Secure HTTPS/WSS for communication with the backend.
+
+2.  **QuizSecure Backend Server:**
+    *   **API Layer:** RESTful APIs (e.g., built with FastAPI/Python or Express.js/Node.js) for handling requests from student clients and teacher/admin interfaces.
+    *   **Business Logic:** Manages users, quizzes, exam sessions, proctoring rules, log aggregation, and reporting.
+    *   **Database Interface:** Interacts with the primary database and caching layer.
+    *   **(Optional) Server-Side AI Processing:** For more complex AI tasks if local processing is insufficient, or for model training/updates.
+
+3.  **QuizSecure Database:**
+    *   **Primary Datastore (PostgreSQL):** Stores user profiles, quiz content, student submissions, proctoring logs, institutional settings.
+    *   **Caching Layer (Redis):** For session management, frequently accessed data, and message queuing.
+
+4.  **Teacher/Admin Web Interface/Application:**
+    *   **Frontend:** Web technologies (React, Vue, or Angular) or a separate Electron application.
+    *   **Functionality:** Quiz creation, user management, report viewing, system configuration.
+
+### Data Models (High-Level)
+
+*   **User:** UserID, Username, HashedPassword, Role (Student, Teacher, Admin), EnrollmentData (facial template/hash), CreationDate, LastLogin.
+*   **Quiz:** QuizID, Title, Description, CreatedBy (TeacherID), TimeLimit, QuestionsList (references Question model), ProctoringSettingsID.
+*   **Question:** QuestionID, QuizID, Text, Type (MCQ, FillInBlank), Options (for MCQ), CorrectAnswer(s), Points.
+*   **ExamSession:** SessionID, StudentID, QuizID, StartTime, EndTime, Status (Active, Submitted, Suspended), Score.
+*   **ProctoringLog:** LogID, SessionID, Timestamp, EventType (GazeDeviation, MultipleFaces, ObjectDetected_YOLOv8n, AppSwitchAttempt), Severity, ScreenshotReference (optional, with consent), ActionTaken (Warning, Pause).
+*   **StudentSubmission:** SubmissionID, SessionID, QuestionID, StudentAnswer, IsCorrect.
+
+### APIs and Integrations
+
+*   **Student Client <-> Backend API:**
+    *   `POST /auth/login`: Authenticate student.
+    *   `GET /quizzes`: Fetch available quizzes.
+    *   `POST /quizzes/{id}/start_session`: Initiate exam session, download quiz data.
+    *   `POST /sessions/{id}/proctoring_event`: Send proctoring event data.
+    *   `POST /sessions/{id}/submit`: Submit exam answers.
+*   **Teacher/Admin Interface <-> Backend API:**
+    *   CRUD APIs for `/users`, `/quizzes`, `/questions`.
+    *   `GET /sessions/{id}/report`: Fetch proctoring report.
+    *   `POST /admin/settings`: Configure institutional settings.
+*   **No direct third-party integrations planned for MVP unless for authentication (e.g., OAuth with institutional SSO).**
+
+### Infrastructure Requirements
+
+*   **Backend Server:** Cloud-based virtual machines (e.g., AWS EC2, Azure VMs, Google Compute Engine) or container orchestration (Kubernetes). Scalable based on load.
+*   **Database Server:** Managed PostgreSQL service (e.g., AWS RDS, Azure Database for PostgreSQL) or self-hosted. Redis instance.
+*   **Storage:** Secure object storage (e.g., AWS S3, Azure Blob Storage) for encrypted screenshots (if implemented with consent) and application installers.
+*   **CDN:** For distributing application installers and updates efficiently.
+*   **Load Balancers:** To distribute traffic to backend servers.
+*   **Monitoring & Logging Infrastructure:** For backend services (e.g., ELK stack, Prometheus, Grafana).
+
+# Development Roadmap
+
+### Phase 1: Core Proctoring Engine & Secure Exam Environment (MVP Foundation)
+
+*   **Student Desktop Application (Electron):**
+    *   Basic application shell and installer (Windows, macOS).
+    *   Secure login module (communicating with backend).
+    *   Webcam access and display module.
+    *   **Local AI Module (MVP):**
+        *   MTCNN integration for robust face detection and presence verification.
+        *   Basic gaze deviation detection (e.g., head pose estimation indicating looking away).
+        *   Core environment lockdown: Disable task switching, new windows, basic copy-paste restrictions.
+    *   Simple quiz display (load questions from backend, basic MCQ interaction).
+    *   Local logging of detected proctoring events (face not detected, significant gaze away).
+    *   Secure communication for sending logs and basic submission data to backend.
+*   **Backend Server (MVP):**
+    *   User authentication (student, basic teacher role for testing).
+    *   API endpoints for student login, fetching a predefined quiz.
+    *   API endpoint to receive and store basic proctoring logs (timestamp, event type).
+    *   API endpoint to receive quiz submission (answers only).
+*   **Database (MVP):**
+    *   Schema for Users, basic Quizzes (hardcoded or minimal creation), ProctoringLogs, Submissions.
+*   **Teacher/Admin Interface (Minimal for Testing):**
+    *   Ability to view raw proctoring logs for a specific student session.
+    *   Ability to create a very simple MCQ quiz.
+
+### Phase 2: Enhanced Proctoring, Quiz Functionality & Basic Reporting
+
+*   **Student Desktop Application (Electron):**
+    *   **Local AI Module (Enhancement):**
+        *   Integrate multiple face detection.
+        *   Integrate basic object detection using **YOLOv8n** (e.g., for phones).
+        *   Refine gaze tracking accuracy and thresholds.
+    *   Implement graduated warning system (visual/auditory alerts in-app).
+    *   Implement automatic quiz pause/resume based on proctoring rules.
+    *   Full quiz functionality: Support for fill-in-the-blanks, navigation, timer.
+    *   More robust environment lockdown features.
+    *   Identity verification flow at exam start (capture image/video, send to backend for comparison).
+*   **Backend Server (Enhancement):**
+    *   Store and manage student facial enrollment data (securely).
+    *   API for identity verification comparison.
+    *   Implement proctoring rules engine (configurable thresholds for warnings/pauses).
+    *   Process and aggregate proctoring logs for reporting.
+    *   Full quiz submission processing and basic scoring.
+*   **Teacher/Admin Interface (Enhancement):**
+    *   Full quiz creation and management UI (MCQ, Fill-in-blanks, points, time limits).
+    *   User management (enroll students, create teacher accounts).
+    *   Basic proctoring report view (summary of incidents, event timeline).
+    *   Interface to configure proctoring settings for quizzes.
+
+### Phase 3: Administrator Controls, Advanced Reporting & Polish
+
+*   **Student Desktop Application (Electron):**
+    *   **Local AI Module (Refinement):**
+        *   Improve performance and accuracy of all local AI models (MTCNN, MediaPipe, **YOLOv8n**).
+        *   Consider temporal analysis for behavior patterns (if feasible locally).
+    *   Offline resilience (continue proctoring for short network drops, sync logs on reconnect).
+    *   Auto-update mechanism.
+*   **Backend Server (Refinement):**
+    *   Advanced reporting features (analytics, trends).
+    *   Role-based access control for all features.
+    *   Audit trails for admin actions.
+*   **Teacher/Admin Interface (Refinement):**
+    *   **Administrator Dashboard:** System health, user statistics, institutional settings management (data retention, global proctoring rules).
+    *   Detailed proctoring reports with filtering and search.
+    *   Tools for managing application deployment/versions.
+    *   UI/UX polish based on feedback.
+*   **General:**
+    *   Comprehensive security hardening.
+    *   Scalability improvements for backend.
+    *   Thorough testing and QA across all components.
+
+# Logical Dependency Chain
+
+1.  **Foundation (Phase 1 Start):**
+    *   Backend: User Authentication API, basic User/Quiz data models.
+    *   Student App: Electron shell, Login UI, Webcam access.
+    *   *Rationale:* Need to authenticate before anything else. Webcam is core input.
+
+2.  **Core Proctoring & Quiz Display (Phase 1 Middle):**
+    *   Student App: Integrate MTCNN for face presence. Basic quiz display logic.
+    *   Backend: API to serve simple quiz data, API to receive basic proctoring logs.
+    *   *Rationale:* Get the most fundamental proctoring (face presence) and exam interaction working. Visible progress.
+
+3.  **Basic Environment Lockdown & Logging (Phase 1 End):**
+    *   Student App: Implement initial environment lockdown features. Send logs to backend.
+    *   Backend: Store proctoring logs.
+    *   Teacher Interface: Basic log viewer.
+    *   *Rationale:* Achieve a minimally viable proctored exam experience.
+
+4.  **Enhanced Local AI Proctoring (Phase 2 Start):**
+    *   Student App: Add multiple face detection, object detection (**YOLOv8n**), refined gaze tracking.
+    *   *Rationale:* Build upon the core face detection with more sophisticated local AI.
+
+5.  **Interactive Proctoring Rules & Identity Verification (Phase 2 Middle):**
+    *   Student App: Implement warning system, auto-pause. Identity verification UI.
+    *   Backend: Proctoring rules engine, identity verification logic, facial enrollment storage.
+    *   *Rationale:* Make the proctoring interactive and add a crucial security layer.
+
+6.  **Full Quiz & Teacher Management Features (Phase 2 End):**
+    *   Student App: Full quiz type support, timer.
+    *   Teacher Interface: Full quiz creation UI, user management UI, basic reporting.
+    *   Backend: Support all quiz features, scoring, report generation.
+    *   *Rationale:* Complete the core functionalities for both students and educators.
+
+7.  **Administrator Controls & Advanced Features (Phase 3):**
+    *   Admin Interface: Institutional settings, deployment tools.
+    *   Backend: Advanced reporting, role-based access, audit trails.
+    *   Student App: Offline resilience, auto-update.
+    *   *Rationale:* Focus on enterprise features, polish, and long-term maintainability.
+
+*Pacing Principle:* Each feature (e.g., "Gaze Detection," "Object Detection with YOLOv8n," "Quiz Timer") should be developed as atomically as possible, first getting a basic version working end-to-end (UI -> Local Logic -> Backend Logging -> Basic Report Display), then iterating to refine its accuracy, UI, and configurability.
+
+# Risks and Mitigations
+
+1.  **Technical Challenges:**
+    *   **Risk:** Local AI model performance (accuracy, speed of MTCNN, MediaPipe, **YOLOv8n**) on diverse student hardware.
+    *   **Mitigation:** Start with optimized models (e.g., TensorFlow Lite, ONNX Runtime for **YOLOv8n**). Provide clear minimum hardware specs. Allow users to adjust AI sensitivity or disable less critical features if performance is an issue. Extensive testing on various hardware.
+    *   **Risk:** Complexity of robust cross-platform environment lockdown in Electron.
+    *   **Mitigation:** Prioritize critical lockdown features for MVP. Research existing libraries and OS-specific solutions. Incremental implementation and testing.
+    *   **Risk:** Ensuring secure communication and data handling between desktop client and backend.
+    *   **Mitigation:** Use HTTPS/WSS, end-to-end encryption for sensitive data where possible. Regular security audits.
+
+2.  **Figuring out the MVP that we can build upon:**
+    *   **Risk:** Over-scoping MVP, leading to delays.
+    *   **Mitigation:** Strictly adhere to Phase 1 features. Focus on core value: secure exam environment with basic, reliable face presence proctoring and simple quiz functionality. Get early feedback on this core.
+    *   **Risk:** MVP is too minimal and doesn't demonstrate enough value.
+    *   **Mitigation:** Ensure Phase 1 includes a demonstrable end-to-end flow, however basic, from login to submission with at least one key proctoring feature visibly working and logged.
+
+3.  **Resource Constraints:**
+    *   **Risk:** Limited development team size impacting velocity.
+    *   **Mitigation:** Phased approach allows for focused development. Prioritize features ruthlessly. Leverage open-source libraries and frameworks where appropriate.
+    *   **Risk:** Difficulty in acquiring diverse hardware for testing local AI performance.
+    *   **Mitigation:** Utilize virtual machines where possible for OS testing. Engage a small, diverse group of beta testers with varied hardware. Clearly document known limitations.
+
+4.  **User Acceptance & Privacy Concerns:**
+    *   **Risk:** Students perceive the application as too intrusive or "spyware."
+    *   **Mitigation:** Be transparent about what is monitored and why. Maximize local processing to reduce data sent to servers. Provide clear privacy policies. Ensure reliable performance to minimize false positives and user frustration.
+
+# Appendix
+
+### Research Findings (Summary)
+
+*   MTCNN is effective for face detection in varied conditions.
+*   MediaPipe offers robust facial landmark and head pose estimation suitable for local deployment.
+*   **YOLOv8 Nano (YOLOv8n)** provides an excellent balance of speed and accuracy for real-time object detection on edge/desktop devices, outperforming older lightweight models for many tasks.
+*   Electron is a viable framework for cross-platform desktop applications requiring hardware access (camera) and some level of system control.
+*   User trust and transparency are paramount for proctoring solutions.
+
+### Technical Specifications (Detailed - *Placeholder for more granular details as developed*)
+
+*   **Specific AI Model Versions:** (e.g., MTCNN variant, TensorFlow.js version, **YOLOv8n ONNX export details**)
+*   **API Endpoint Definitions (OpenAPI/Swagger):** (To be developed)
+*   **Database Schema (Detailed ERD):** (To be developed)
+*   **Security Protocols:** TLS 1.2+, specifics of token handling, encryption algorithms for data at rest and in transit.
