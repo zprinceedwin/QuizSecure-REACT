@@ -1,4 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../services/authContext";
 import "./dashboard.css";
 import logo from "../../assets/quizsecure-logo.png";
 
@@ -9,14 +11,31 @@ function StudentDashboard() {
   const [username, setUsername] = useState("Student"); // Placeholder
   const topRef = useRef(null);
   const redeemSectionRef = useRef(null);
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
 
   useEffect(() => {
-    // Placeholder for future user storage system (e.g., localStorage, session, backend context)
-    const storedUsername = localStorage.getItem("username"); // to be updated later
-    if (storedUsername) {
-      setUsername(storedUsername);
+    // Use user from auth context if available
+    if (user && user.username) {
+      setUsername(user.username);
     }
-  }, []);
+    // Fallback to localStorage
+    else {
+      const storedUsername = localStorage.getItem("username");
+      if (storedUsername) {
+        setUsername(storedUsername);
+      }
+    }
+  }, [user]);
+
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
 
   const handleRedeem = () => {
     if (codeInput === "12345") {
@@ -30,6 +49,11 @@ function StudentDashboard() {
       setMessage("Invalid or already used code.");
       setQuizData(null);
     }
+  };
+
+  const handleJoinQuiz = () => {
+    // Navigate to the disclaimer page to start the quiz process
+    navigate("/disclaimer");
   };
 
   const scrollToRedeem = () => {
@@ -60,7 +84,7 @@ function StudentDashboard() {
         <nav>
           <ul>
             <li><button onClick={scrollToRedeem}>Redeem Code</button></li>
-            <li><button>Sign Out</button></li>
+            <li><button onClick={handleSignOut}>Sign Out</button></li>
           </ul>
         </nav>
       </aside>
@@ -87,7 +111,7 @@ function StudentDashboard() {
           <div className="quiz-card">
             <p className="quiz-title">📌 <strong>{quizData.title}</strong></p>
             <p>Start: {quizData.startTime} | End: {quizData.endTime}</p>
-            <button className="join-btn">Join Now</button>
+            <button className="join-btn" onClick={handleJoinQuiz}>Join Now</button>
           </div>
         )}
       </main>

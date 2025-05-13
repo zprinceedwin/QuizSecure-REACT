@@ -5,7 +5,7 @@
  */
 
 import { sessionService } from './sessionService';
-import { authService } from './authService';
+import authService from './authService';
 import { offlineManager } from './offlineManager';
 import { VERBOSE_LOGGING } from './config';
 

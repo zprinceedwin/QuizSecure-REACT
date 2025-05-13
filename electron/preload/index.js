@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('electron', {
         'ping',
         'dialog:open',
         'webcam:getDevices',
+        'webcam:check-permission', // Add permission check channel
+        'webcam:request-permission', // Add permission request channel
         'auth:login',
         'auth:logout',
         'auth:getToken', // New method to get token
@@ -139,6 +141,33 @@ contextBridge.exposeInMainWorld('electron', {
         return await ipcRenderer.invoke('auth:refreshToken');
       } catch (error) {
         return { success: false, error: 'Failed to refresh token', details: error.message };
+      }
+    }
+  },
+  // Webcam API - webcam access and permission helpers
+  webcam: {
+    // Check if the application has webcam access permission
+    checkPermission: async () => {
+      try {
+        return await ipcRenderer.invoke('webcam:check-permission');
+      } catch (error) {
+        return { permission: false, error: 'Failed to check webcam permission', details: error.message };
+      }
+    },
+    // Request webcam access permission
+    requestPermission: async () => {
+      try {
+        return await ipcRenderer.invoke('webcam:request-permission');
+      } catch (error) {
+        return { permission: false, error: 'Failed to request webcam permission', details: error.message };
+      }
+    },
+    // Get available webcam devices
+    getDevices: async () => {
+      try {
+        return await ipcRenderer.invoke('webcam:getDevices');
+      } catch (error) {
+        return { devices: [], error: 'Failed to get webcam devices', details: error.message };
       }
     }
   }

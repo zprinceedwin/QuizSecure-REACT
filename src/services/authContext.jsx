@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { authService } from './authService';
+import authService from './authService';
 import { sessionService } from './sessionService';
 import { VERBOSE_LOGGING } from './config';
 
@@ -179,7 +179,7 @@ export function AuthProvider({ children }) {
         clearInterval(tokenRefreshInterval);
       }
     };
-  }, [trackActivity, tokenRefreshInterval]);
+  }, []);
   
   // Setup token refresh interval
   const setupTokenRefresh = useCallback(() => {
@@ -217,9 +217,15 @@ export function AuthProvider({ children }) {
       
       if (result.user) {
         // Successfully authenticated
+        const finalRole = result.user.role || userRole;
         setUser(result.user);
-        setRole(result.user.role || userRole);
+        setRole(finalRole);
         setIsAuthenticated(true);
+        // Add logging immediately after state setters
+        console.log('[AuthContext] Login successful state SET:', { 
+          isAuthenticated: true, // We just set this
+          role: finalRole      // We just set this
+        });
         
         // Set up token refresh
         setupTokenRefresh();
@@ -231,7 +237,8 @@ export function AuthProvider({ children }) {
           console.log(`AuthContext: User ${username} logged in successfully`);
         }
         
-        return { success: true, user: result.user };
+        // Return success status, user object, and the role
+        return { success: true, user: result.user, role: finalRole };
       } else {
         // Failed to authenticate
         setError('Login failed: Invalid response from server');

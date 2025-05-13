@@ -6,6 +6,7 @@ import DisclaimerPage from "./pages/student/DisclaimerPage";
 import FaceScanPage from "./pages/student/FaceScanPage";
 import QuizPage from "./pages/student/QuizPage";
 import ScoreSummaryPage from "./pages/student/ScoreSummaryPage";
+import FaceDetectionBenchmarkPage from "./pages/student/FaceDetectionBenchmarkPage";
 import TeacherDashboard from "./pages/teacher/TeacherDashboard";
 import CreateQuizPage from "./pages/teacher/CreateQuizPage";
 import QuestionManagementPage from "./pages/teacher/QuestionManagementPage";
@@ -14,13 +15,14 @@ import QuestionManagementLandingPage from './pages/teacher/QuestionManagementLan
 import StudentLogTimeLinePage from './pages/teacher/StudentLogTimeLinePage';
 import ViolationSummaryPage from './pages/teacher/ViolationSummaryPage';
 import LoginPage from './pages/login/LoginPage';
-import IPCDemo from './components/IPCDemo';
+import IPCDemo from './components/utilities/IPCDemo';
 import SecurityTest from './pages/SecurityTest';
+import WebcamTestPage from './pages/WebcamTestPage';
 
 // Import Authentication Provider
 import { AuthProvider } from './services/authContext';
 // Import Protected Route
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/routing/ProtectedRoute';
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -109,8 +111,12 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<LoginPage />} />
           
-          {/* Root route - redirect to login */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Root route - redirect based on authentication status */}
+          <Route path="/" element={
+            <ProtectedRoute requiredRoles="student" redirectPath="/login">
+              <Navigate to="/student" replace />
+            </ProtectedRoute>
+          } />
           <Route path="" element={<Navigate to="/login" replace />} />
           
           {/* Protected student routes */}
@@ -151,6 +157,22 @@ function App() {
             element={
               <ProtectedRoute requiredRoles="student">
                 <ScoreSummaryPage />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Development routes */}
+          <Route path="/ipc-demo" element={<IPCDemo />} />
+          <Route path="/security-test" element={<SecurityTest />} />
+          <Route path="/webcam-test" element={<WebcamTestPage />} />
+          <Route path="/face-detection-benchmark" element={<FaceDetectionBenchmarkPage />} />
+          
+          {/* Protected benchmark route (original protected route for student dashboard use) */}
+          <Route 
+            path="/protected/face-detection-benchmark" 
+            element={
+              <ProtectedRoute requiredRoles="student">
+                <FaceDetectionBenchmarkPage />
               </ProtectedRoute>
             } 
           />
@@ -212,10 +234,6 @@ function App() {
               </ProtectedRoute>
             } 
           />
-          
-          {/* Development routes */}
-          <Route path="/ipc-demo" element={<IPCDemo />} />
-          <Route path="/security-test" element={<SecurityTest />} />
           
           {/* 404 - Redirect to login */}
           <Route path="*" element={<Navigate to="/login" replace />} />

@@ -10,10 +10,15 @@ const path = require('path');
 const electronIsDev = require('electron-is-dev');
 // Force production mode for electron:preview script
 const isDev = process.argv.includes('electron:preview') ? false : electronIsDev;
-const security = require('./security'); // Import our security module
-const errorHandler = require('./error-handler'); // Import our error handler
-const urlValidator = require('./url-validator'); // Import URL validator
-const screenSecurity = require('./screen-security'); // Import screen security module
+const security = require('../utils/security'); // Updated path
+const errorHandler = require('../utils/error-handler'); // Updated path
+const urlValidator = require('../utils/url-validator'); // Updated path
+const screenSecurity = require('../utils/screen-security'); // Updated path
+const webcamPermissions = require('../utils/webcam-permissions'); // Add webcam permissions module
+const config = require('../utils/config'); // Import the config file
+
+// Extract constants from config
+const { VERBOSE_LOGGING, SESSION_TIMEOUT } = config;
 
 // Share development mode with other modules
 global.isDevelopment = isDev;
@@ -34,7 +39,7 @@ if (isDev) {
 let mainWindow;
 
 // Session timer variables
-const SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+// Use the SESSION_TIMEOUT from our config instead of duplicating the value
 let sessionTimer;
 
 /**
@@ -50,7 +55,7 @@ function resetSessionTimer(window) {
     if (window && !window.isDestroyed()) {
       window.webContents.send('session:timeout');
     }
-  }, SESSION_TIMEOUT_MS);
+  }, SESSION_TIMEOUT);
 }
 
 function createWindow() {
@@ -62,11 +67,11 @@ function createWindow() {
       width: 1280,
       height: 720,
       title: 'QuizSecure',
-      icon: path.join(__dirname, 'assets/icons/win/app.ico'),
+      icon: path.join(__dirname, '../../assets/icons/win/app.ico'), // Updated path
       webPreferences: {
         contextIsolation: true,
         nodeIntegration: false,
-        preload: path.join(__dirname, 'preload.js'),
+        preload: path.join(__dirname, '../preload/index.js'), // Updated path
         spellcheck: false,
         sandbox: false, // Needs to be disabled for screen-security module to work
         webSecurity: true
@@ -98,6 +103,11 @@ function createWindow() {
     console.log('Setting up error handling...');
     errorHandler.setupGlobalErrorHandling(mainWindow);
     console.log('Error handling set up successfully');
+    
+    // Set up webcam permission handlers
+    console.log('Setting up webcam permission handlers...');
+    webcamPermissions.setupWebcamPermissionHandlers(ipcMain);
+    console.log('Webcam permission handlers set up successfully');
     
     // Register an IPC channel for checking recording status
     // This is already registered in screen-security.js, so we don't need to register it again
@@ -145,7 +155,7 @@ function createWindow() {
       mainWindow.webContents.openDevTools({ mode: 'detach' });
     } else {
       // In production, load from distribution
-      const filePath = path.join(__dirname, 'dist/index.html');
+      const filePath = path.join(__dirname, '../../dist/index.html'); // Updated path
       console.log('Loading production file:', filePath);
       mainWindow.loadFile(filePath)
         .catch(error => {

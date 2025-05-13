@@ -1,4 +1,5 @@
-import SecurityTestUI from '../components/SecurityTestUI';
+import SecurityTestUI from '../components/security/SecurityTestUI';
+import { Link } from 'react-router-dom';
 
 /**
  * Security Test Page Component
@@ -18,6 +19,24 @@ function SecurityTest() {
       
       <main>
         <SecurityTestUI />
+        
+        {/* Testing Links */}
+        <div className="testing-links">
+          <h3>Additional Test Pages:</h3>
+          <Link to="/webcam-test">Webcam Test Page</Link>
+          <Link to="/face-detection-benchmark">Face Detection Benchmark (No Auth)</Link>
+        </div>
+        
+        <div className="testing-description">
+          <h3>About Face Detection Benchmark</h3>
+          <p>
+            The Face Detection Benchmark tool helps measure and optimize the performance of the face detection system.
+            It provides statistics like FPS, detection rate, and processing times to ensure optimal configuration.
+          </p>
+          <p>
+            <strong>When clicking "Start Benchmark":</strong> Allow camera access and click the debug toggle to troubleshoot if needed.
+          </p>
+        </div>
       </main>
       
       <footer>
@@ -72,6 +91,47 @@ function SecurityTest() {
         main {
           flex: 1;
           padding: 20px;
+        }
+        
+        .testing-links {
+          margin-top: 30px;
+          padding: 15px;
+          background-color: #f8f9fa;
+          border-radius: 5px;
+          border: 1px solid #ddd;
+        }
+        
+        .testing-links h3 {
+          margin-top: 0;
+          color: #333;
+        }
+        
+        .testing-links a {
+          display: inline-block;
+          margin: 5px 10px 5px 0;
+          padding: 8px 15px;
+          background-color: #007bff;
+          color: white;
+          text-decoration: none;
+          border-radius: 4px;
+          font-weight: 500;
+        }
+        
+        .testing-links a:hover {
+          background-color: #0069d9;
+        }
+        
+        .testing-description {
+          margin-top: 20px;
+          padding: 15px;
+          background-color: #e8f4fd;
+          border-radius: 5px;
+          border: 1px solid #b3d7ff;
+        }
+        
+        .testing-description h3 {
+          margin-top: 0;
+          color: #0056b3;
         }
         
         footer {

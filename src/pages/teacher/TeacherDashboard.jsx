@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../services/authContext';
 import './TeacherDashboard.css';
 import logo from '../../assets/quizsecure-logo.png';
 
@@ -16,10 +17,15 @@ import ViolationSummaryPage from './ViolationSummaryPage';
 const TeacherDashboard = () => {
   const [activePage, setActivePage] = useState('paper');
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const handleLogout = () => {
-    // 🔐 Optional: Clear session/token here
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const renderPage = () => {

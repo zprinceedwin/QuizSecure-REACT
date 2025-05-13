@@ -1,611 +1,375 @@
 // src/services/authService.js
-import { apiClient } from './apiClient';
-import { offlineManager } from './offlineManager';
-import { secureStorageService } from './secureStorageService';
-import { USE_MOCK_DATA, VERBOSE_LOGGING } from './config';
-import { sessionService } from './sessionService';
+// import { ipcRenderer } from "electron"; // REMOVED THIS LINE
+import { createClient } from "@supabase/supabase-js";
+import { v4 as uuidv4 } from "uuid";
 
-const TOKEN_KEY = 'authToken';
-const USER_ROLE_KEY = 'userRole';
-const LAST_ONLINE_KEY = 'lastOnlineTimestamp';
-const SESSION_ID_KEY = 'sessionId';
-const REMEMBER_ME_KEY = 'rememberMe';
+// Supabase Client Initialization
+const SUPABASE_URL = "https://nkkvsmrjffhzhcfobopm.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra3ZzbXJqZmZoemhjZm9ib3BtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcxNDgzNDMsImV4cCI6MjA2MjcyNDM0M30.GwilH-iUS-9HFUMS57pJJFRM_nzEWTj-5VLzWAQf4dQ";
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Track if we've already tried logging in while offline
-let offlineLoginAttempted = false;
+console.log("authService.js: Supabase client initialized.");
 
-/**
- * Logs in the user.
- * @param {string} username - The username.
- * @param {string} password - The password.
- * @param {string} role - The user role (student/teacher).
- * @param {boolean} rememberMe - Whether to persist the session across browser restarts.
- * @returns {Promise<any>} - The user data from the API on successful login.
- */
-async function login(username, password, role = 'student', rememberMe = false) {
-  try {
-    if (USE_MOCK_DATA) {
-      if (VERBOSE_LOGGING) console.log('authService.login using MOCK response');
-      
-      // Simple mock authentication
-      if (username && password) {
-        const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
-        const sessionId = Date.now().toString(36) + Math.random().toString(36).substring(2);
-        
-        // Use secureStorageService for token storage
-        secureStorageService.setItem(TOKEN_KEY, mockToken);
-        secureStorageService.setItem(USER_ROLE_KEY, role);
-        secureStorageService.setItem(SESSION_ID_KEY, sessionId);
-        secureStorageService.setItem(REMEMBER_ME_KEY, rememberMe.toString());
-        
-        // Store the response in offline cache for potential offline login
-        const userResponse = { 
-          token: mockToken,
-          sessionId: sessionId,
-          user: { 
-            id: role === 'student' ? 'user123' : 'user789',
-            username: username,
-            role: role,
-            firstName: role === 'student' ? 'Test' : 'Professor',
-            lastName: role === 'student' ? 'Student' : 'Smith'
-          },
-          rememberMe: rememberMe
-        };
-        
-        // Cache the user data for offline login
-        offlineManager.cacheData('offline_auth_' + username, {
-          token: mockToken,
-          sessionId: sessionId,
-          user: userResponse.user,
-          timestamp: Date.now(),
-          rememberMe: rememberMe
-        });
-        
-        // Create session with persistence option
-        sessionService.createSession(
-          userResponse.user, 
-          { 
-            sessionId: sessionId,
-            persistent: rememberMe 
-          }
-        );
-        
-        return userResponse;
-      } 
-      else {
-        throw new Error('Invalid username or password');
-      }
+// Constants for storage keys - IMPORTANT: Ensure these match actual usage if different
+const USER_SESSION_KEY = "quizSecureUserSession"; 
+// const OFFLINE_USERS_KEY = "quizSecureOfflineUsers"; // Commented out if not immediately used with Supabase
+
+// Helper function to manage user session in localStorage
+const setUserSession = (session) => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+      console.log("[AuthService] setUserSession: Session saved.", session);
+    } catch (error) {
+      console.error("[AuthService] setUserSession: Error saving session to localStorage:", error);
     }
-    
-    // Check if we're offline but have cached credentials for this user
-    if (!offlineManager.getOnlineStatus() && !offlineLoginAttempted) {
-      if (VERBOSE_LOGGING) console.log('authService: Attempting offline login for: ' + username);
-      
-      // Try to get cached auth data for this username
-      const cachedAuth = offlineManager.getCachedData('offline_auth_' + username);
-      
-      if (cachedAuth) {
-        // Simple offline validation - in a real app, you'd use a more secure approach
-        // For a prototype, we're allowing login with cached credentials when offline
-        offlineLoginAttempted = true;
-        
-        if (VERBOSE_LOGGING) console.log('authService: Offline login successful using cached credentials');
-        
-        // Store token and role in secure storage
-        secureStorageService.setItem(TOKEN_KEY, cachedAuth.token);
-        secureStorageService.setItem(USER_ROLE_KEY, cachedAuth.user.role);
-        secureStorageService.setItem(SESSION_ID_KEY, cachedAuth.sessionId);
-        secureStorageService.setItem(REMEMBER_ME_KEY, (rememberMe || cachedAuth.rememberMe || false).toString());
-        
-        // Track when the user last logged in while offline
-        secureStorageService.setItem(LAST_ONLINE_KEY, cachedAuth.timestamp.toString());
-        
-        // Create session with persistence option based on remembered preference or current choice
-        sessionService.createSession(
-          cachedAuth.user, 
-          { 
-            sessionId: cachedAuth.sessionId,
-            persistent: rememberMe || (cachedAuth.rememberMe || false)
-          }
-        );
-        
-        return {
-          token: cachedAuth.token,
-          sessionId: cachedAuth.sessionId,
-          user: cachedAuth.user,
-          offlineLogin: true,
-          rememberMe: rememberMe || (cachedAuth.rememberMe || false)
-        };
-      }
-      
-      if (VERBOSE_LOGGING) console.log('authService: No cached credentials found, offline login failed');
-      throw new Error('Cannot log in while offline without previous credentials');
-    }
-    
-    // Use Electron IPC for authentication when in Electron environment
-    if (window.electron) {
-      try {
-        const credentials = { username, password, role, rememberMe };
-        const result = await window.electron.ipc.invoke('auth:login', credentials);
-        
-        if (result.success && result.sessionId) {
-          // Store session ID securely
-          secureStorageService.setItem(SESSION_ID_KEY, result.sessionId);
-          secureStorageService.setItem(USER_ROLE_KEY, result.role);
-          secureStorageService.setItem(REMEMBER_ME_KEY, rememberMe.toString());
-          
-          // No need to store actual token - it stays in main process for security
-          
-          // Create session with persistence option
-          sessionService.createSession(
-            result.user, 
-            { 
-              sessionId: result.sessionId,
-              persistent: rememberMe
-            }
-          );
-          
-          return {
-            sessionId: result.sessionId,
-            user: result.user,
-            rememberMe: rememberMe
-          };
-        } else {
-          throw new Error(result.error || 'Login failed');
-        }
-      } catch (error) {
-        console.error('Electron login error:', error);
-        throw error;
-      }
-    }
-    
-    // Online login flow for non-Electron environments
-    const response = await apiClient.post('/auth/login', { username, password, role, rememberMe });
-    if (response && response.token) {
-      // Store in secure storage
-      secureStorageService.setItem(TOKEN_KEY, response.token);
-      if (response.sessionId) {
-        secureStorageService.setItem(SESSION_ID_KEY, response.sessionId);
-      }
-      if (response.user && response.user.role) {
-        secureStorageService.setItem(USER_ROLE_KEY, response.user.role);
-      }
-      secureStorageService.setItem(REMEMBER_ME_KEY, rememberMe.toString());
-      
-      // Store the successful login in cache for potential offline login later
-      if (response.user) {
-        offlineManager.cacheData('offline_auth_' + username, {
-          token: response.token,
-          sessionId: response.sessionId,
-          user: response.user,
-          timestamp: Date.now(),
-          rememberMe: rememberMe
-        });
-      }
-      
-      // Create a session for the logged-in user with persistence option
-      if (response && (response.user || response.sessionId)) {
-        sessionService.createSession(
-          response.user || { username, role }, 
-          { 
-            sessionId: response.sessionId,
-            persistent: rememberMe 
-          }
-        );
-      }
-      
-      return {
-        ...response,
-        rememberMe: rememberMe
-      };
-    } else {
-      throw new Error('Login failed: No token received from server.');
-    }
-  } catch (error) {
-    console.error('Login error:', error);
-    // Reset offline login flag on error so future attempts can be made
-    offlineLoginAttempted = false;
-    // It's often good to throw the error again so UI can catch and display it
-    throw error; 
   }
-}
-
-/**
- * Logs out the user.
- */
-async function logout() {
-  try {
-    // End the user's session first
-    await sessionService.endSession();
-    
-    // Get session ID for Electron authentication
-    const sessionId = secureStorageService.getItem(SESSION_ID_KEY);
-    
-    // Use Electron IPC for logout if available
-    if (window.electron && sessionId) {
-      await window.electron.ipc.invoke('auth:logout', sessionId);
-    }
-    
-    // Clear secure storage
-    secureStorageService.removeItem(TOKEN_KEY);
-    secureStorageService.removeItem(USER_ROLE_KEY);
-    secureStorageService.removeItem(LAST_ONLINE_KEY);
-    secureStorageService.removeItem(SESSION_ID_KEY);
-    secureStorageService.removeItem(REMEMBER_ME_KEY);
-    
-    // Reset offline login tracking
-    offlineLoginAttempted = false;
-    
-    // Notify backend about logout if online
-    if (offlineManager.getOnlineStatus()) {
-      try {
-        // Example: await apiClient.post('/auth/logout');
-        if (VERBOSE_LOGGING) console.log('authService: User logged out, token removed, server notified.');
-      } catch (error) {
-        console.warn('Failed to notify server about logout:', error);
-      }
-    } else {
-      if (VERBOSE_LOGGING) console.log('authService: User logged out while offline, token removed locally.');
-    }
-    
-    return { success: true };
-  } catch (error) {
-    console.error('Logout error:', error);
-    throw error;
-  }
-}
-
-/**
- * Validates the current authentication token.
- * @returns {Promise<boolean>} True if token is valid, false otherwise.
- */
-async function validateToken() {
-  try {
-    // Get session ID for Electron authentication
-    const sessionId = secureStorageService.getItem(SESSION_ID_KEY);
-    
-    // Use Electron IPC for token validation if available
-    if (window.electron && sessionId) {
-      const result = await window.electron.ipc.invoke('auth:validateToken', sessionId);
-      return result.valid;
-    }
-    
-    // For browser or fallback - check if token exists and is not expired
-    // This is a simple check - a real implementation would verify with the server
-    const token = secureStorageService.getItem(TOKEN_KEY);
-    return !!token;
-  } catch (error) {
-    console.error('Token validation error:', error);
-    return false;
-  }
-}
-
-/**
- * Refreshes the authentication token.
- * @returns {Promise<boolean>} True if successful, false otherwise.
- */
-async function refreshToken() {
-  try {
-    // Get session ID for Electron authentication
-    const sessionId = secureStorageService.getItem(SESSION_ID_KEY);
-    
-    // Use Electron IPC for token refresh if available
-    if (window.electron && sessionId) {
-      const result = await window.electron.ipc.invoke('auth:refreshToken', sessionId);
-      return result.success;
-    }
-    
-    // For browser or fallback, implement token refresh logic if needed
-    return false;
-  } catch (error) {
-    console.error('Token refresh error:', error);
-    return false;
-  }
-}
-
-/**
- * Gets the current authentication token from secure storage.
- * @returns {string|null} The token, or null if not found.
- */
-function getToken() {
-  try {
-    return secureStorageService.getItem(TOKEN_KEY);
-  } catch (e) {
-    console.warn('Could not access secure storage to get authToken.', e);
-    return null;
-  }
-}
-
-/**
- * Gets the user's role from secure storage.
- * @returns {string|null} The role, or null if not found.
- */
-function getUserRole() {
-  try {
-    return secureStorageService.getItem(USER_ROLE_KEY);
-  } catch (e) {
-    console.warn('Could not access secure storage to get userRole.', e);
-    return null;
-  }
-}
-
-/**
- * Checks if a user is currently authenticated (i.e., a token exists).
- * @returns {boolean} True if authenticated, false otherwise.
- */
-function isAuthenticated() {
-  return !!getToken() || !!secureStorageService.getItem(SESSION_ID_KEY);
-}
-
-/**
- * Gets the timestamp of the last online login
- * @returns {number|null} Timestamp in milliseconds, or null if not found
- */
-function getLastOnlineTimestamp() {
-  try {
-    const value = secureStorageService.getItem(LAST_ONLINE_KEY);
-    return value ? parseInt(value, 10) : null;
-  } catch (e) {
-    return null;
-  }
-}
-
-/**
- * Checks if the user's offline session has expired
- * @param {number} maxOfflineDuration - Maximum duration allowed in milliseconds (default: 7 days)
- * @returns {boolean} True if session is expired, false if still valid
- */
-function isOfflineSessionExpired(maxOfflineDuration = 7 * 24 * 60 * 60 * 1000) {
-  const lastTimestamp = getLastOnlineTimestamp();
-  if (!lastTimestamp) return false; // No offline session
-  
-  const now = Date.now();
-  return (now - lastTimestamp) > maxOfflineDuration;
-}
-
-/**
- * Checks if the current user has a specific role.
- * @param {string} role - The role to check for (e.g., 'student', 'teacher').
- * @returns {boolean} True if the user has the role, false otherwise.
- */
-function hasRole(role) {
-  const userRole = getUserRole();
-  return userRole === role;
-}
-
-/**
- * Registers a new user.
- * @param {Object} userData - User registration data
- * @returns {Promise<Object>} Registration response
- */
-async function register(userData) {
-  try {
-    if (USE_MOCK_DATA) {
-      if (VERBOSE_LOGGING) console.log('authService.register using MOCK response', userData);
-      
-      // Mock validation
-      if (!userData.username || !userData.password) {
-        throw new Error('Username and password are required');
-      }
-      
-      if (userData.password.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
-      }
-      
-      // Check if a user with this username already exists (in a real app)
-      // Here we'll just mock a successful registration
-      const mockToken = 'mock-jwt-token-' + Math.random().toString(36).substring(2);
-      
-      return {
-        success: true,
-        message: 'Registration successful (mock response)',
-        token: mockToken,
-        user: {
-          id: 'user' + Math.floor(Math.random() * 1000),
-          username: userData.username,
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          email: userData.email || '',
-          role: userData.role || 'student'
-        }
-      };
-    }
-    
-    // Check if we're offline
-    if (!offlineManager.getOnlineStatus()) {
-      if (VERBOSE_LOGGING) console.log('authService: Cannot register new user while offline');
-      throw new Error('Registration requires an internet connection');
-    }
-    
-    const response = await apiClient.post('/auth/register', userData);
-    
-    // If this was queued for offline processing, modify the message
-    if (response.queued) {
-      return { 
-        ...response, 
-        message: 'Registration submitted and will be processed when you\'re back online.' 
-      };
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Registration error:', error);
-    throw error;
-  }
-}
-
-/**
- * Initiates a password reset process for a user.
- * @param {string} email - The user's email address
- * @returns {Promise<Object>} Password reset response
- */
-async function requestPasswordReset(email) {
-  try {
-    if (USE_MOCK_DATA) {
-      if (VERBOSE_LOGGING) console.log('authService.requestPasswordReset using MOCK response', email);
-      
-      // Mock validation
-      if (!email) {
-        throw new Error('Email is required');
-      }
-      
-      // Simple mock email validation
-      if (!email.includes('@')) {
-        throw new Error('Invalid email format');
-      }
-      
-      return {
-        success: true,
-        message: 'Password reset instructions have been sent to your email (mock response)'
-      };
-    }
-    
-    // Check if we're offline
-    if (!offlineManager.getOnlineStatus()) {
-      if (VERBOSE_LOGGING) console.log('authService: Cannot request password reset while offline');
-      throw new Error('Password reset requires an internet connection');
-    }
-    
-    const response = await apiClient.post('/auth/password-reset/request', { email });
-    
-    // If this was queued for offline processing, modify the message
-    if (response.queued) {
-      return { 
-        ...response, 
-        message: 'Password reset request will be processed when you\'re back online.' 
-      };
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Password reset request error:', error);
-    throw error;
-  }
-}
-
-/**
- * Resets a user's password using a reset token.
- * @param {string} token - The password reset token
- * @param {string} newPassword - The new password
- * @returns {Promise<Object>} Password reset confirmation
- */
-async function resetPassword(token, newPassword) {
-  try {
-    if (USE_MOCK_DATA) {
-      if (VERBOSE_LOGGING) console.log('authService.resetPassword using MOCK response');
-      
-      // Mock validation
-      if (!token || !newPassword) {
-        throw new Error('Token and new password are required');
-      }
-      
-      if (newPassword.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
-      }
-      
-      return {
-        success: true,
-        message: 'Password has been reset successfully (mock response)'
-      };
-    }
-    
-    // Check if we're offline
-    if (!offlineManager.getOnlineStatus()) {
-      if (VERBOSE_LOGGING) console.log('authService: Cannot reset password while offline');
-      throw new Error('Password reset requires an internet connection');
-    }
-    
-    const response = await apiClient.post('/auth/password-reset/reset', { token, newPassword });
-    
-    // If this was queued for offline processing, modify the message (unlikely for password reset)
-    if (response.queued) {
-      return { 
-        ...response, 
-        message: 'Password reset will be processed when you\'re back online.' 
-      };
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Password reset error:', error);
-    throw error;
-  }
-}
-
-/**
- * Verifies an email verification token.
- * @param {string} token - The email verification token
- * @returns {Promise<Object>} Verification confirmation
- */
-async function verifyEmail(token) {
-  try {
-    if (USE_MOCK_DATA) {
-      if (VERBOSE_LOGGING) console.log('authService.verifyEmail using MOCK response');
-      
-      // Mock validation
-      if (!token) {
-        throw new Error('Verification token is required');
-      }
-      
-      return {
-        success: true,
-        message: 'Email has been verified successfully (mock response)'
-      };
-    }
-    
-    // Check if we're offline
-    if (!offlineManager.getOnlineStatus()) {
-      if (VERBOSE_LOGGING) console.log('authService: Cannot verify email while offline');
-      throw new Error('Email verification requires an internet connection');
-    }
-    
-    const response = await apiClient.post('/auth/verify-email', { token });
-    
-    // If this was queued for offline processing, modify the message
-    if (response.queued) {
-      return { 
-        ...response, 
-        message: 'Email verification will be processed when you\'re back online.' 
-      };
-    }
-    
-    return response;
-  } catch (error) {
-    console.error('Email verification error:', error);
-    throw error;
-  }
-}
-
-/**
- * Force synchronization of any queued auth operations
- * @returns {Promise<any>} Result of the synchronization attempt
- */
-async function synchronize() {
-  return apiClient.synchronize();
-}
-
-// Create the authService object before exposing to window
-const authService = {
-  login,
-  logout,
-  getToken,
-  getUserRole,
-  isAuthenticated,
-  hasRole,
-  validateToken,
-  refreshToken,
-  register,
-  requestPasswordReset,
-  resetPassword,
-  verifyEmail,
-  getLastOnlineTimestamp,
-  isOfflineSessionExpired,
-  synchronize
 };
 
-// Expose service to window for console testing (only after it's fully defined)
-if (typeof window !== 'undefined') {
-  window.authService = authService;
-}
+const getUserSession = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      const sessionStr = localStorage.getItem(USER_SESSION_KEY);
+      if (sessionStr) {
+        return JSON.parse(sessionStr);
+      }
+    } catch (error) {
+      console.error("[AuthService] getUserSession: Error reading session from localStorage:", error);
+    }
+  }
+  return null;
+};
 
-export { authService }; 
+const clearUserSession = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.removeItem(USER_SESSION_KEY);
+      console.log("[AuthService] clearUserSession: Session cleared from localStorage.");
+    } catch (error) {
+      console.error("[AuthService] clearUserSession: Error removing session from localStorage:", error);
+    }
+  }
+};
+
+// Simulating a delay for network requests (optional, can be removed for production)
+const simulateNetworkDelay = (ms = 200) =>
+  new Promise((resolve) => setTimeout(resolve, ms));
+
+const authService = {
+  login: async (email, password) => {
+    console.log("[AuthService] login: Attempting Supabase login for", email);
+    await simulateNetworkDelay();
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        console.error("[AuthService] login: Supabase login error:", error.message);
+        if (error.message.includes("Invalid login credentials")) {
+          return { success: false, message: "Invalid email or password." };
+        }
+        return { success: false, message: error.message || "Login failed. Please try again." };
+      }
+
+      if (data && data.user && data.session) {
+        console.log("[AuthService] login: Supabase login successful for user:", data.user.id);
+        // Fetch user profile from your 'users' table based on data.user.id
+        // This assumes you have a 'users' table with 'role' and 'full_name'
+        let userProfileData = {};
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('id, email, full_name, role')
+            .eq('id', data.user.id)
+            .single();
+
+          if (profileError) {
+            console.error('[AuthService] login: Error fetching user profile:', profileError.message);
+            // Proceed with basic info if profile fetch fails, or handle as critical error
+            userProfileData = {
+              id: data.user.id,
+              email: data.user.email,
+              role: 'student', // Default role
+              name: data.user.email, // Default name
+            };
+          } else if (profile) {
+            userProfileData = {
+              id: profile.id,
+              email: profile.email,
+              role: profile.role || 'student',
+              name: profile.full_name || data.user.email,
+            };
+          }
+        } catch (profileFetchError) {
+            console.error('[AuthService] login: Exception fetching user profile:', profileFetchError);
+             userProfileData = {
+              id: data.user.id,
+              email: data.user.email,
+              role: 'student',
+              name: data.user.email,
+            };
+        }
+        
+        setUserSession({ user: userProfileData, token: data.session.access_token, refreshToken: data.session.refresh_token });
+        return { success: true, user: userProfileData };
+      }
+      return { success: false, message: "Login failed. No user data or session received." };
+    } catch (e) {
+      console.error("[AuthService] login: Unexpected error during Supabase login:", e);
+      return { success: false, message: "An unexpected error occurred during login." };
+    }
+  },
+
+  register: async (userData) => {
+    const { email, password, fullName, role = 'student' } = userData;
+    console.log("[AuthService] register: Attempting Supabase registration for", email);
+    await simulateNetworkDelay();
+
+    try {
+      // Step 1: Sign up the user with Supabase Auth
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: email,
+        password: password,
+        // options: { data: { full_name: fullName, role: role } } // user_metadata set here might be overwritten by trigger or not used directly
+      });
+
+      if (signUpError) {
+        console.error("[AuthService] register: Supabase signUp error:", signUpError.message);
+        if (signUpError.message.includes("User already registered")) {
+          return { success: false, message: "This email is already registered." };
+        }
+        return { success: false, message: signUpError.message || "Registration failed. Please try again." };
+      }
+
+      if (authData && authData.user) {
+        console.log("[AuthService] register: Supabase auth.signUp successful for user:", authData.user.id);
+        
+        console.log("[AuthService] register: Inspecting authData.session right after signUp:", authData.session);
+
+        // Attempt to explicitly set the session for the client
+        if (authData.session && authData.session.access_token && authData.session.refresh_token) {
+          console.log("[AuthService] register: Attempting to explicitly set session before inserting profile.");
+          try {
+            const { error: setSessionError } = await supabase.auth.setSession({
+              access_token: authData.session.access_token,
+              refresh_token: authData.session.refresh_token,
+            });
+            if (setSessionError) {
+              console.error("[AuthService] register: Error explicitly setting session:", setSessionError.message);
+              // Potentially return an error here if setting session is critical and fails
+            } else {
+              console.log("[AuthService] register: Session explicitly set successfully.");
+            }
+          } catch (e) {
+            console.error("[AuthService] register: Exception during explicit setSession call:", e);
+          }
+        } else {
+          console.warn("[AuthService] register: authData.session or its tokens are missing. Cannot explicitly set session. This is unexpected if email confirmation is off.");
+          // This scenario is highly problematic for the subsequent insert if it occurs.
+        }
+
+        // Step 2: Insert user profile data into your public 'users' table
+        // This is crucial because Supabase auth.users is separate from your public tables.
+        const { data: profileData, error: insertError } = await supabase
+          .from('users') 
+          .insert([
+            {
+              id: authData.user.id, // Use the ID from the auth user
+              email: email,
+              full_name: fullName,
+              role: role,
+              // hashed_password should NOT be stored here, Supabase auth handles it.
+            },
+          ])
+          .select() // Optionally select to confirm insert
+          .single(); // Assuming one user is inserted
+
+        if (insertError) {
+          console.error("[AuthService] register: Error inserting user profile into 'users' table:", insertError.message);
+          // Potentially roll back Supabase auth user or mark as unprofiled if critical
+          return { success: false, message: `Registration created auth user, but profile setup failed: ${insertError.message}` };
+        }
+        
+        console.log("[AuthService] register: User profile created in 'users' table:", profileData);
+
+        // For Supabase, signUp often requires email confirmation by default.
+        // authData.session will be null if confirmation is pending.
+        if (authData.session) {
+          const userProfile = {
+            id: authData.user.id,
+            email: authData.user.email,
+            role: profileData?.role || role, // Use role from profile table
+            name: profileData?.full_name || fullName, // Use name from profile table
+          };
+          setUserSession({ user: userProfile, token: authData.session.access_token, refreshToken: authData.session.refresh_token });
+          return { success: true, user: userProfile, message: "Registration successful!" };
+        } else {
+          console.warn("[AuthService] register: Supabase user auth created, email confirmation may be pending. Profile created.");
+          return { success: true, user: { id: authData.user.id, email: authData.user.email, fullName, role }, message: "Registration successful! Please check your email to confirm your account if required, then log in." };
+        }
+      }
+      return { success: false, message: "Registration failed. No auth user data received." };
+    } catch (e) {
+      console.error("[AuthService] register: Unexpected error during Supabase registration:", e);
+      return { success: false, message: "An unexpected error occurred during registration." };
+    }
+  },
+
+  logout: async () => {
+    console.log("[AuthService] logout: Attempting Supabase logout");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("[AuthService] logout: Supabase logout error:", error.message);
+      }
+    } catch (e) {
+      console.error("[AuthService] logout: Unexpected error during Supabase signOut:", e);
+    } finally {
+      clearUserSession();
+      // Use the exposed ipcRenderer from the preload script
+      if (window.electron && window.electron.ipc && typeof window.electron.ipc.send === 'function') {
+        window.electron.ipc.send("user-logout");
+        console.log("[AuthService] logout: Electron IPC user-logout sent via window.electron.ipc.send.");
+      } else {
+        // Fallback or log if window.electron.ipc.send is not available, though it should be via preload
+        console.warn("[AuthService] logout: window.electron.ipc.send not available.");
+      }
+      console.log("[AuthService] logout: Local session cleared.");
+    }
+    return { success: true, message: "Logged out successfully." };
+  },
+
+  checkAuth: async () => {
+    console.log("[AuthService] checkAuth: Checking Supabase session.");
+    const { data: { session }, error } = await supabase.auth.getSession();
+
+    if (error) {
+      console.error("[AuthService] checkAuth: Error fetching session:", error.message);
+      clearUserSession();
+      return { isAuthenticated: false, user: null };
+    }
+
+    if (session && session.user) {
+      console.log("[AuthService] checkAuth: Active Supabase session found for user:", session.user.id);
+      // Optionally, you might want to refresh or re-fetch profile data here too
+      // For simplicity, we'll try to use existing localStorage session if valid, then Supabase session
+      let localSession = getUserSession();
+      if (localSession && localSession.token === session.access_token && localSession.user?.id === session.user.id) {
+         console.log("[AuthService] checkAuth: Using valid local session data.");
+        return { isAuthenticated: true, user: localSession.user };
+      }
+      
+      // If local session is stale or missing, reconstruct it
+      console.log("[AuthService] checkAuth: Local session stale or missing, reconstructing from Supabase session.");
+      let userProfileData = {};
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('id, email, full_name, role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.error('[AuthService] checkAuth: Error fetching user profile:', profileError.message);
+            userProfileData = { id: session.user.id, email: session.user.email, role: 'student', name: session.user.email };
+          } else if (profile) {
+            userProfileData = { id: profile.id, email: profile.email, role: profile.role || 'student', name: profile.full_name || session.user.email };
+          }
+        } catch (profileFetchError) {
+            console.error('[AuthService] checkAuth: Exception fetching user profile:', profileFetchError);
+            userProfileData = { id: session.user.id, email: session.user.email, role: 'student', name: session.user.email };
+        }
+
+      setUserSession({ user: userProfileData, token: session.access_token, refreshToken: session.refresh_token });
+      return { isAuthenticated: true, user: userProfileData };
+    }
+    
+    console.log("[AuthService] checkAuth: No active Supabase session.");
+    clearUserSession();
+    return { isAuthenticated: false, user: null };
+  },
+
+  isAuthenticated: () => {
+    const session = getUserSession();
+    // Basic check, consider token expiry if your token has an easily parsable expiry time
+    // For Supabase, the robust check is async via checkAuth/validateToken
+    return !!(session && session.user && session.token);
+  },
+
+  getUserRole: () => {
+    const session = getUserSession();
+    return session && session.user ? session.user.role : null;
+  },
+
+  validateToken: async () => {
+    console.log("[AuthService] validateToken: Validating token via checkAuth.");
+    const authState = await authService.checkAuth(); // Use authService.checkAuth to avoid recursion if checkAuth itself is moved/renamed
+    return authState.isAuthenticated;
+  },
+
+  refreshToken: async () => {
+    console.log("[AuthService] refreshToken: Attempting to refresh Supabase session.");
+    try {
+      const { data: { session }, error } = await supabase.auth.refreshSession(); // Tries to refresh using existing refresh token
+      // supabase.auth.getSession() also refreshes if needed and a valid session exists
+      // const { data: { session }, error } = await supabase.auth.getSession();
+
+
+      if (error) {
+        console.error("[AuthService] refreshToken: Error refreshing session:", error.message);
+        clearUserSession(); // If refresh fails, clear session
+        return false; // Indicate failure
+      }
+
+      if (session && session.user) {
+        console.log("[AuthService] refreshToken: Session refreshed successfully for user:", session.user.id);
+        // Re-fetch profile and update local session, similar to checkAuth
+        let userProfileData = {};
+        try {
+          const { data: profile, error: profileError } = await supabase
+            .from('users')
+            .select('id, email, full_name, role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileError) {
+            console.error('[AuthService] refreshToken: Error fetching user profile after refresh:', profileError.message);
+            userProfileData = { id: session.user.id, email: session.user.email, role: 'student', name: session.user.email };
+          } else if (profile) {
+            userProfileData = { id: profile.id, email: profile.email, role: profile.role || 'student', name: profile.full_name || session.user.email };
+          }
+        } catch (profileFetchError) {
+            console.error('[AuthService] refreshToken: Exception fetching user profile after refresh:', profileFetchError);
+            userProfileData = { id: session.user.id, email: session.user.email, role: 'student', name: session.user.email };
+        }
+        setUserSession({ user: userProfileData, token: session.access_token, refreshToken: session.refresh_token });
+        return true; // Indicate success
+      }
+      
+      console.log("[AuthService] refreshToken: No session returned after refresh attempt.");
+      clearUserSession(); // If no session, clear local
+      return false; // Indicate failure
+    } catch (e) {
+      console.error("[AuthService] refreshToken: Unexpected error during session refresh:", e);
+      clearUserSession();
+      return false; // Indicate failure
+    }
+  },
+
+  getCurrentUser: () => {
+    const session = getUserSession();
+    return session ? session.user : null;
+  },
+
+  isElectron: () => {
+    return typeof window !== "undefined" && window.electron;
+  },
+  
+  // Potentially add other methods if needed, e.g., password reset, email update
+  // For now, focusing on core login, register, logout, checkAuth, getCurrentUser
+};
+
+export default authService;

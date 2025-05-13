@@ -6,7 +6,7 @@
  */
 
 import { secureStorageService } from './secureStorageService';
-import { authService } from './authService';
+import authService from './authService';
 import { VERBOSE_LOGGING } from './config';
 
 // Session configuration constants
@@ -271,17 +271,15 @@ function recordUserActivity() {
 function isSessionValid(session) {
   if (!session) return false;
   
-  // Check if the token is still valid
-  const isTokenValid = authService.validateToken();
-  
-  // Check if the session has expired
+  // We're not going to do token validation here since it's async
+  // Just check if the session hasn't expired based on time
   const expiryTime = secureStorageService.getItem(SESSION_EXPIRY_KEY);
   if (!expiryTime) return false;
   
   const now = Date.now();
   const expiry = parseInt(expiryTime, 10);
   
-  return isTokenValid && now < expiry;
+  return now < expiry;
 }
 
 /**
@@ -374,9 +372,6 @@ async function endSession() {
       role: session.role
     });
   }
-  
-  // Perform logout through auth service
-  await authService.logout();
 }
 
 /**

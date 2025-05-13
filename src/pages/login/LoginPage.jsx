@@ -9,22 +9,27 @@ import './login.css';
 function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
+  const { login, isAuthenticated, isLoading, error, clearError, role } = useAuth();
 
   // Get return path from location state (for redirecting after login)
   const returnPath = location.state?.returnPath || '/';
   
-  // Redirect if already authenticated
+  // Redirect if *already* authenticated (on initial load)
   useEffect(() => {
+    // Log initial state check
+    console.log('[LoginPage Effect - Initial Load Check]', { isAuthenticated, role });
     if (isAuthenticated) {
-      const role = localStorage.getItem('userRole');
       if (role === 'teacher') {
         navigate('/teacher');
+      } else if (role === 'student') {
+        navigate('/student');
       } else {
-        navigate('/');
+        navigate(returnPath);
       }
     }
-  }, [isAuthenticated, navigate]);
+    // Depend only on isAuthenticated for initial load check, 
+    // subsequent navigations are handled by handleLogin
+  }, [isAuthenticated]); // Removed role, navigate, returnPath dependencies
 
   // View state (login or register)
   const [isSignup, setIsSignup] = useState(false);
@@ -32,7 +37,7 @@ function LoginPage() {
   // 🔐 Form input states
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
+  const [selectedRole, setSelectedRole] = useState('');
   const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
   const [rememberMe, setRememberMe] = useState(false); // Remember me functionality
   const [formErrors, setFormErrors] = useState({}); // Form validation errors
@@ -78,7 +83,7 @@ function LoginPage() {
     e.preventDefault();
 
     // Form validation
-    const loginData = { username, password, role };
+    const loginData = { username, password, role: selectedRole };
     const errors = validateForm(loginData);
     
     if (Object.keys(errors).length > 0) {
@@ -95,14 +100,24 @@ function LoginPage() {
     }
 
     try {
-      // Use the auth context login function with remember me option
-      const result = await login(username, password, role, rememberMe);
+      // Use the auth context login function which now returns the role
+      const result = await login(username, password, selectedRole, rememberMe);
       
-      // If login was successful, navigate to the appropriate page
-      if (result.success) {
-        if (role === 'student') navigate('/');
-        else if (role === 'teacher') navigate('/teacher');
-        else navigate(returnPath); // Default return path
+      console.log('[LoginPage handleLogin] After await login:', { result });
+
+      // Navigate *immediately* using the role returned from the login function
+      if (result.success && result.role) {
+        console.log(`Login Success! Role: ${result.role}, Navigating...`);
+        if (result.role === 'student') {
+          navigate('/student');
+        } else if (result.role === 'teacher') {
+          navigate('/teacher');
+        } else {
+          navigate(returnPath); // Fallback
+        }
+      } else if (!result.success) {
+        console.log('Login attempt failed in component:', result.error);
+        // Error state is set in context and displayed
       }
     } catch (err) {
       console.error('Login error:', err);
@@ -164,8 +179,8 @@ function LoginPage() {
               
               <div className="form-group">
                 <select 
-                  value={role} 
-                  onChange={(e) => setRole(e.target.value)}
+                  value={selectedRole} 
+                  onChange={(e) => setSelectedRole(e.target.value)}
                   disabled={isLoading}
                   className={formErrors.role ? 'error' : ''}
                 >

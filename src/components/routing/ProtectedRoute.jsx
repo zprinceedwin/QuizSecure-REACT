@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../services/authContext';
+import { useAuth } from '../../services/authContext';
 import './ProtectedRoute.css';
 
 /**
@@ -15,9 +15,9 @@ import './ProtectedRoute.css';
  * @returns {React.ReactElement} The child components or a redirect.
  */
 const ProtectedRoute = ({ children, requiredRoles, redirectPath = '/login' }) => {
-  const { isAuthenticated, isLoading, hasRole } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, role } = useAuth();
   const location = useLocation();
-
+  
   if (isLoading) {
     return (
       <div className="loading-screen">
@@ -31,7 +31,11 @@ const ProtectedRoute = ({ children, requiredRoles, redirectPath = '/login' }) =>
     return <Navigate to={redirectPath} state={{ returnPath: location.pathname }} replace />;
   }
 
-  if (requiredRoles && !hasRole(requiredRoles)) {
+  const userHasRequiredRole = hasRole(requiredRoles);
+
+  if (requiredRoles && !userHasRequiredRole) {
+    if (role === 'teacher') return <Navigate to="/teacher" replace />;
+    if (role === 'student') return <Navigate to="/student" replace />;
     return <Navigate to="/" replace />;
   }
 

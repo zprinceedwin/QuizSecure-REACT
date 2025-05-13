@@ -1,15 +1,72 @@
-# React + Vite
+# QuizSecure
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A secure proctoring system for online exams, built with React and Electron.
 
-Currently, two official plugins are available:
+## Project Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+QuizSecure is a thesis project prototype that provides:
 
-## Expanding the ESLint configuration
+- Secure exam environment for students
+- Proctoring features to prevent cheating
+- Teacher interface for exam management
+- Cross-platform desktop application using Electron
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Project Structure
+
+The project has been organized following best practices:
+
+- `electron/` - Electron-specific code for the desktop application
+- `src/` - React application source code
+- `assets/` - Static assets like icons and images
+- `docs/` - Documentation files
+
+For a detailed breakdown of the project structure, see [PROJECT_STRUCTURE.md](docs/PROJECT_STRUCTURE.md).
+
+## Development
+
+### Prerequisites
+
+- Node.js (v14+)
+- npm (v6+)
+
+### Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server with Electron
+npm run electron:dev
+```
+
+### Build
+
+```bash
+# Build for Windows
+npm run electron:build:win
+
+# Build for macOS
+npm run electron:build:mac
+
+# Build for Linux
+npm run electron:build:linux
+
+# Build for all platforms
+npm run electron:build:all
+```
+
+## Testing
+
+```bash
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode
+npm run test:watch
+```
 
 ## Platform Compatibility (Prototype)
 

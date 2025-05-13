@@ -1,0 +1,44 @@
+┌─────────────────────────────────────────────────────┐
+│ (1) Video Input                                     │
+│     • Webcam / Built-in Camera                      │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ (2) Face Detection & Landmarks (Combined)           │
+│     • MediaPipe Face Mesh                           │
+│     • Outputs face bounding box + 468 landmarks     │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ (3) Feature Extraction                              │
+│     • Head Pose (using SolvePnP on landmarks)       │
+│     • Eye Aspect Ratio (blink detection)            │
+│     • Gaze Direction (from eye landmarks)           │
+│     • Face Detection Confidence                     │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ (4) Contextual Object Detection                     │
+│     • YOLOv8 Nano (filtered to detect only:         │
+│       phones, books, people, monitors)              │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ (5) Sliding Window Analysis                         │
+│     • Calculate statistics over 5-second windows:    │
+│       - Frequency of gaze deviation                  │
+│       - Duration of face absence                     │
+│       - Object presence frequency                    │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ (6) Rule-Based Detection + ML Classification        │
+│     • XGBoost classifier for behavior patterns      │
+│     • Rule-based alerts for clear violations        │
+└─────────────────────────────────────────────────────┘
+                        ↓
+┌─────────────────────────────────────────────────────┐
+│ (7) Alert Generation and Logging                    │
+│     • Warning system with graduated responses        │
+│     • Session logs with timestamps and alert types   │
+└─────────────────────────────────────────────────────┘
